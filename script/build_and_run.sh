@@ -2,9 +2,9 @@
 set -euo pipefail
 
 MODE="${1:-run}"
-APP_NAME="CaffeinateBar"
-BUNDLE_NAME="Caffeinate"
-BUNDLE_ID="dev.sumant.caffeinatebar"
+APP_NAME="Vigil"
+BUNDLE_NAME="Vigil"
+BUNDLE_ID="dev.sumant.vigil"
 MIN_SYSTEM_VERSION="13.0"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

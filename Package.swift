@@ -3,20 +3,21 @@
 import PackageDescription
 
 let package = Package(
-    name: "CaffeinateBar",
+    name: "Vigil",
     platforms: [
         .macOS(.v13)
     ],
     products: [
-        .executable(name: "CaffeinateBar", targets: ["CaffeinateBar"])
+        .executable(name: "Vigil", targets: ["Vigil"])
     ],
     targets: [
         .executableTarget(
-            name: "CaffeinateBar",
+            name: "Vigil",
             linkerSettings: [
-                .linkedFramework("IOKit")
+                .linkedFramework("IOKit"),
+                .linkedFramework("ServiceManagement")
             ]
         ),
-        .testTarget(name: "CaffeinateBarTests", dependencies: ["CaffeinateBar"])
+        .testTarget(name: "VigilTests", dependencies: ["Vigil"])
     ]
 )

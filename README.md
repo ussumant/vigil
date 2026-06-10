@@ -1,18 +1,21 @@
-# Caffeinate
+# Vigil
 
-A tiny open-source macOS menu bar app for keeping the machine awake.
+A tiny open-source macOS menu bar app for keeping the machine awake during long-running work.
 
-![Caffeinate app icon](Assets/AppIcon-1024.png)
+![Vigil app icon](Assets/AppIcon-1024.png)
 
-Click the bolt in the menu bar and choose **Keep Awake**. While enabled, the app uses native IOKit power assertions to prevent idle display sleep, idle system sleep, and supported system sleep.
+Click the eye in the menu bar and choose **Enable Wakelock**. While enabled, the app uses native IOKit power assertions to prevent idle display sleep and idle system sleep.
 
-macOS may still enforce hardware lid-close sleep on some MacBooks. The system-sleep assertion is strongest when the Mac is on AC power and in a supported clamshell setup.
+macOS public power assertions may still sleep for lid close, Apple menu sleep, low battery, and other system sleep reasons. True no-display clamshell override without an external display is not available through the public IOKit assertion API alone.
 
 ## Features
 
 - Menu bar only, no persistent window
 - Native IOKit power assertions
-- Minimal toggle: `Keep Awake`, `Stop Keeping Awake`, `Quit`
+- State-aware menu bar icon: open eye when active, closed/slashed eye when inactive
+- Battery guard with configurable auto-disable threshold
+- Launch-at-login toggle in the menu
+- Minimal commands: `Enable Wakelock`, `Disable Wakelock`, `Quit`
 - Generated coffee travel cup app icon
 - SwiftPM build, test, run, and release scripts
 
@@ -22,7 +25,7 @@ macOS may still enforce hardware lid-close sleep on some MacBooks. The system-sl
 ./script/build_and_run.sh
 ```
 
-The built app bundle is staged at `dist/Caffeinate.app`.
+The built app bundle is staged at `dist/Vigil.app`.
 
 ## Test
 
@@ -36,13 +39,20 @@ swift test
 ./script/package_release.sh
 ```
 
-The release script builds the generated coffee-cup icon, stages `dist/release/Caffeinate.app`, signs it with the configured Developer ID identity, verifies the signature, and creates `dist/Caffeinate-1.0.0-notarization.zip`.
+The release script builds the generated coffee-cup icon, stages `dist/release/Vigil.app`, signs it with the configured Developer ID identity, verifies the signature, and creates:
+
+- `dist/Vigil-1.0.0-notarization.zip`
+- `dist/Vigil-1.0.0.dmg`
 
 Set `NOTARYTOOL_PROFILE` to a configured `xcrun notarytool` keychain profile to submit and staple notarization.
 
+## Homebrew Cask
+
+A cask template lives at `packaging/homebrew/vigil.rb`. Replace the release URL/checksum after publishing a notarized DMG.
+
 ## Privacy
 
-Caffeinate does not collect analytics, store user data, or make network requests.
+Vigil does not collect analytics, store user data, or make network requests.
 
 ## License
 

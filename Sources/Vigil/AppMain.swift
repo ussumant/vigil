@@ -2,7 +2,7 @@ import AppKit
 
 @main
 @MainActor
-enum CaffeinateBarApp {
+enum VigilApp {
     private static var appDelegate: AppDelegate?
 
     static func main() {
@@ -21,7 +21,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
-        statusBarController = StatusBarController(manager: CaffeinateController())
+        statusBarController = StatusBarController(manager: VigilController())
     }
 
     func applicationWillTerminate(_ notification: Notification) {

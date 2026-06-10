@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_NAME="CaffeinateBar"
-BUNDLE_NAME="Caffeinate"
-BUNDLE_ID="dev.sumant.caffeinatebar"
+APP_NAME="Vigil"
+BUNDLE_NAME="Vigil"
+BUNDLE_ID="dev.sumant.vigil"
 VERSION="1.0.0"
 BUILD_NUMBER="1"
 MIN_SYSTEM_VERSION="13.0"
@@ -19,6 +19,8 @@ APP_RESOURCES="$APP_CONTENTS/Resources"
 APP_BINARY="$APP_MACOS/$APP_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
 ZIP_PATH="$DIST_DIR/$BUNDLE_NAME-$VERSION-notarization.zip"
+DMG_PATH="$DIST_DIR/$BUNDLE_NAME-$VERSION.dmg"
+DMG_ROOT="$RELEASE_DIR/dmg-root"
 IDENTITY="${CODESIGN_IDENTITY:-$DEFAULT_IDENTITY}"
 
 cd "$ROOT_DIR"
@@ -30,7 +32,7 @@ pkill -x "$APP_NAME" >/dev/null 2>&1 || true
 swift build -c release
 BUILD_BINARY="$(swift build -c release --show-bin-path)/$APP_NAME"
 
-rm -rf "$APP_BUNDLE" "$ZIP_PATH"
+rm -rf "$APP_BUNDLE" "$ZIP_PATH" "$DMG_PATH" "$DMG_ROOT"
 mkdir -p "$APP_MACOS" "$APP_RESOURCES"
 cp "$BUILD_BINARY" "$APP_BINARY"
 cp "$ROOT_DIR/Resources/AppIcon.icns" "$APP_RESOURCES/AppIcon.icns"
@@ -76,12 +78,18 @@ codesign --force --timestamp --options runtime --sign "$IDENTITY" "$APP_BUNDLE"
 codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
 
 ditto -c -k --keepParent "$APP_BUNDLE" "$ZIP_PATH"
+mkdir -p "$DMG_ROOT"
+cp -R "$APP_BUNDLE" "$DMG_ROOT/"
+ln -s /Applications "$DMG_ROOT/Applications"
+hdiutil create -volname "$BUNDLE_NAME" -srcfolder "$DMG_ROOT" -ov -format UDZO "$DMG_PATH"
 echo "Signed app: $APP_BUNDLE"
 echo "Notarization zip: $ZIP_PATH"
+echo "DMG: $DMG_PATH"
 
 if [[ -n "${NOTARYTOOL_PROFILE:-}" ]]; then
   xcrun notarytool submit "$ZIP_PATH" --keychain-profile "$NOTARYTOOL_PROFILE" --wait
   xcrun stapler staple "$APP_BUNDLE"
+  xcrun stapler staple "$DMG_PATH"
   spctl -a -vvv -t install "$APP_BUNDLE"
 else
   echo "Skipping notarization: set NOTARYTOOL_PROFILE to a configured xcrun notarytool keychain profile."

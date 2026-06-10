@@ -2,9 +2,10 @@
 
 ## Current Artifact
 
-- App bundle: `dist/release/Caffeinate.app`
-- Notarization ZIP: `dist/Caffeinate-1.0.0-notarization.zip`
-- Bundle ID: `dev.sumant.caffeinatebar`
+- App bundle: `dist/release/Vigil.app`
+- Notarization ZIP: `dist/Vigil-1.0.0-notarization.zip`
+- DMG: `dist/Vigil-1.0.0.dmg`
+- Bundle ID: `dev.sumant.vigil`
 - Signing identity: `Developer ID Application: Sumant Subrahmanya (9J372EUGY8)`
 
 ## Verified
@@ -38,3 +39,7 @@ NOTARYTOOL_PROFILE=sumant-notary ./script/package_release.sh
 ## App Store Notes
 
 Developer ID notarization is for direct distribution outside the Mac App Store. App Store submission still requires the App Store Connect flow, Apple Distribution signing/provisioning, screenshots, metadata, pricing, privacy answers, and manual review.
+
+## Clamshell Override Note
+
+Public IOKit assertions can prevent idle sleep but Apple documents that they may still sleep for lid close, Apple menu sleep, low battery, and other system sleep reasons. A true no-display clamshell override would require a separate privileged/direct-distribution approach and should not be marketed as part of the public-API build until that path is implemented and tested.
