@@ -7,6 +7,16 @@ protocol PowerAssertionManaging {
     func deactivate()
 }
 
+protocol DateProviding {
+    var now: Date { get }
+}
+
+struct SystemDateProvider: DateProviding {
+    var now: Date {
+        Date()
+    }
+}
+
 enum PowerAssertionError: LocalizedError {
     case failed(type: String, code: IOReturn)
 
@@ -28,7 +38,6 @@ protocol BatteryMonitoring {
 }
 
 struct BatteryGuardSettings {
-    static let allowedThresholds = [0, 10, 20, 30, 40, 50]
     static let defaultThreshold = 20
 
     private let defaults: UserDefaults
@@ -41,16 +50,19 @@ struct BatteryGuardSettings {
     var threshold: Int {
         get {
             let value = defaults.object(forKey: key) as? Int ?? Self.defaultThreshold
-            return Self.allowedThresholds.contains(value) ? value : Self.defaultThreshold
+            return Self.sanitize(value)
         }
         set {
-            let sanitized = Self.allowedThresholds.contains(newValue) ? newValue : Self.defaultThreshold
-            defaults.set(sanitized, forKey: key)
+            defaults.set(Self.sanitize(newValue), forKey: key)
         }
     }
 
     var isEnabled: Bool {
         threshold > 0
+    }
+
+    private static func sanitize(_ value: Int) -> Int {
+        min(max(value, 0), 100)
     }
 }
 
@@ -64,18 +76,22 @@ enum VigilState: Equatable {
 final class VigilController {
     private let assertionManager: PowerAssertionManaging
     private let batteryMonitor: BatteryMonitoring
+    private let dateProvider: DateProviding
     private var batterySettings: BatteryGuardSettings
 
     private(set) var state: VigilState = .inactive
+    private(set) var activeSince: Date?
 
     init(
         assertionManager: PowerAssertionManaging = IOKitPowerAssertionManager(),
         batteryMonitor: BatteryMonitoring = IOKitBatteryMonitor(),
-        batterySettings: BatteryGuardSettings = BatteryGuardSettings()
+        batterySettings: BatteryGuardSettings = BatteryGuardSettings(),
+        dateProvider: DateProviding = SystemDateProvider()
     ) {
         self.assertionManager = assertionManager
         self.batteryMonitor = batteryMonitor
         self.batterySettings = batterySettings
+        self.dateProvider = dateProvider
     }
 
     var isActive: Bool {
@@ -115,7 +131,9 @@ final class VigilController {
         do {
             try assertionManager.activate()
             state = .active
+            activeSince = dateProvider.now
         } catch {
+            activeSince = nil
             state = .failed(error.localizedDescription)
         }
 
@@ -125,6 +143,7 @@ final class VigilController {
     @discardableResult
     func stop() -> VigilState {
         assertionManager.deactivate()
+        activeSince = nil
         state = .inactive
         return state
     }
@@ -135,6 +154,7 @@ final class VigilController {
         }
 
         assertionManager.deactivate()
+        activeSince = nil
         state = blockedState
     }
 

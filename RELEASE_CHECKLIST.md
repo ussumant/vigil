@@ -10,7 +10,7 @@
 
 ## Verified
 
-- Generated coffee travel cup icon source: `Assets/AppIcon-1024.png`
+- Generated Vigil eye icon source: `Assets/AppIcon-1024.png`
 - App icon: `Resources/AppIcon.icns`
 - Release build succeeds
 - Developer ID signing succeeds with hardened runtime

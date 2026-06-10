@@ -4,10 +4,12 @@ import XCTest
 final class VigilControllerTests: XCTestCase {
     func testStartActivatesPowerAssertions() {
         let assertions = FakePowerAssertions()
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
         let controller = VigilController(
             assertionManager: assertions,
             batteryMonitor: FakeBatteryMonitor(snapshot: nil),
-            batterySettings: settings()
+            batterySettings: settings(),
+            dateProvider: FakeDateProvider(now: now)
         )
 
         let state = controller.start()
@@ -15,6 +17,7 @@ final class VigilControllerTests: XCTestCase {
         XCTAssertEqual(state, .active)
         XCTAssertEqual(assertions.activateCount, 1)
         XCTAssertTrue(controller.isActive)
+        XCTAssertEqual(controller.activeSince, now)
     }
 
     func testToggleDeactivatesPowerAssertions() {
@@ -31,6 +34,7 @@ final class VigilControllerTests: XCTestCase {
         XCTAssertEqual(state, .inactive)
         XCTAssertFalse(controller.isActive)
         XCTAssertEqual(assertions.deactivateCount, 1)
+        XCTAssertNil(controller.activeSince)
     }
 
     func testRefreshPreservesNativeAssertionState() {
@@ -99,6 +103,40 @@ final class VigilControllerTests: XCTestCase {
         XCTAssertEqual(controller.state, .blockedByBattery(percentage: 20, threshold: 20))
         XCTAssertEqual(assertions.deactivateCount, 1)
         XCTAssertFalse(controller.isActive)
+        XCTAssertNil(controller.activeSince)
+    }
+
+    func testThresholdEditsPersistAndClamp() {
+        let defaults = UserDefaults(suiteName: "VigilTests-\(UUID().uuidString)")!
+        var settings = BatteryGuardSettings(defaults: defaults)
+
+        settings.threshold = 37
+        XCTAssertEqual(BatteryGuardSettings(defaults: defaults).threshold, 37)
+
+        settings.threshold = -8
+        XCTAssertEqual(BatteryGuardSettings(defaults: defaults).threshold, 0)
+
+        settings.threshold = 108
+        XCTAssertEqual(BatteryGuardSettings(defaults: defaults).threshold, 100)
+    }
+
+    func testViewModelUsesExactStatusAndThresholdCopy() {
+        let state = VigilMenuViewModel.make(
+            state: .blockedByBattery(percentage: 19, threshold: 20),
+            activeSince: nil,
+            batterySnapshot: BatterySnapshot(percentage: 19, isOnBatteryPower: true),
+            batteryThreshold: 20,
+            launchAtLoginEnabled: false,
+            appVersion: "1.0.2",
+            buildNumber: "42",
+            osVersion: OperatingSystemVersion(majorVersion: 14, minorVersion: 4, patchVersion: 0)
+        )
+
+        XCTAssertEqual(state.headerText, "Vigil · Idle")
+        XCTAssertEqual(state.statusText, "Released at 19% battery. Limit 20%.")
+        XCTAssertEqual(state.batteryText, "Battery 19% · battery power")
+        XCTAssertEqual(state.warningText, "Below 20% — wakelock will release.")
+        XCTAssertEqual(state.aboutText, "1.0.2 (42) · macOS 14.4")
     }
 }
 
@@ -138,4 +176,8 @@ private final class FakeBatteryMonitor: BatteryMonitoring {
     func snapshot() -> BatterySnapshot? {
         currentSnapshot
     }
+}
+
+private struct FakeDateProvider: DateProviding {
+    let now: Date
 }

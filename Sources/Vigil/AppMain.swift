@@ -9,6 +9,7 @@ enum VigilApp {
         let application = NSApplication.shared
         let delegate = AppDelegate()
 
+        FontLoader.registerBundledFonts()
         appDelegate = delegate
         application.delegate = delegate
         application.run()

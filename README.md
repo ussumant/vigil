@@ -3,8 +3,9 @@
 A tiny open-source macOS menu bar app for keeping the machine awake during long-running work.
 
 ![Vigil app icon](Assets/AppIcon-1024.png)
+![Vigil nocturnal background](Assets/Brand/vigil-nocturnal-background.png)
 
-Click the eye in the menu bar and choose **Enable Wakelock**. While enabled, the app uses native IOKit power assertions to prevent idle display sleep and idle system sleep.
+Click the eye in the menu bar and toggle **Enable Wakelock**. While enabled, the app uses native IOKit power assertions to prevent idle display sleep and idle system sleep.
 
 macOS public power assertions may still sleep for lid close, Apple menu sleep, low battery, and other system sleep reasons. True no-display clamshell override without an external display is not available through the public IOKit assertion API alone.
 
@@ -16,7 +17,8 @@ macOS public power assertions may still sleep for lid close, Apple menu sleep, l
 - Battery guard with configurable auto-disable threshold
 - Launch-at-login toggle in the menu
 - Minimal commands: `Enable Wakelock`, `Disable Wakelock`, `Quit`
-- Generated coffee travel cup app icon
+- Branded AppKit popover with bundled Syne, Inter, and JetBrains Mono fonts
+- Geometric Vigil eye app icon
 - SwiftPM build, test, run, and release scripts
 
 ## Build and Run
@@ -39,12 +41,12 @@ swift test
 ./script/package_release.sh
 ```
 
-The release script builds the generated coffee-cup icon, stages `dist/release/Vigil.app`, signs it with the configured Developer ID identity, verifies the signature, and creates:
+The release script builds the Vigil eye icon, stages `dist/release/Vigil.app`, signs it with the configured Developer ID identity, verifies the signature, and creates:
 
 - `dist/Vigil-1.0.0-notarization.zip`
 - `dist/Vigil-1.0.0.dmg`
 
-Set `NOTARYTOOL_PROFILE` to a configured `xcrun notarytool` keychain profile to submit and staple notarization.
+Set `NOTARY_PROFILE=auc-notary` or `NOTARYTOOL_PROFILE=<profile>` to submit and staple notarization.
 
 ## Homebrew Cask
 

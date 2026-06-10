@@ -36,7 +36,7 @@ BUILD_BINARY="$(swift build -c release --show-bin-path)/$APP_NAME"
 rm -rf "$APP_BUNDLE" "$ZIP_PATH" "$DMG_PATH" "$DMG_ROOT"
 mkdir -p "$APP_MACOS" "$APP_RESOURCES"
 cp "$BUILD_BINARY" "$APP_BINARY"
-cp "$ROOT_DIR/Resources/AppIcon.icns" "$APP_RESOURCES/AppIcon.icns"
+ditto "$ROOT_DIR/Resources" "$APP_RESOURCES"
 chmod +x "$APP_BINARY"
 
 cat >"$INFO_PLIST" <<PLIST
