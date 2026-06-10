@@ -22,6 +22,7 @@ ZIP_PATH="$DIST_DIR/$BUNDLE_NAME-$VERSION-notarization.zip"
 DMG_PATH="$DIST_DIR/$BUNDLE_NAME-$VERSION.dmg"
 DMG_ROOT="$RELEASE_DIR/dmg-root"
 IDENTITY="${CODESIGN_IDENTITY:-$DEFAULT_IDENTITY}"
+NOTARY_PROFILE="${NOTARYTOOL_PROFILE:-${NOTARY_PROFILE:-}}"
 
 cd "$ROOT_DIR"
 
@@ -78,19 +79,32 @@ codesign --force --timestamp --options runtime --sign "$IDENTITY" "$APP_BUNDLE"
 codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
 
 ditto -c -k --keepParent "$APP_BUNDLE" "$ZIP_PATH"
+echo "Signed app: $APP_BUNDLE"
+echo "Notarization zip: $ZIP_PATH"
+
+if [[ -n "$NOTARY_PROFILE" ]]; then
+  xcrun notarytool submit "$ZIP_PATH" --keychain-profile "$NOTARY_PROFILE" --wait
+  xcrun stapler staple "$APP_BUNDLE"
+  xcrun stapler validate "$APP_BUNDLE"
+  spctl -a -vvv -t install "$APP_BUNDLE"
+else
+  echo "Skipping app notarization: set NOTARYTOOL_PROFILE or NOTARY_PROFILE to a configured xcrun notarytool keychain profile."
+fi
+
+rm -rf "$DMG_ROOT" "$DMG_PATH"
 mkdir -p "$DMG_ROOT"
 cp -R "$APP_BUNDLE" "$DMG_ROOT/"
 ln -s /Applications "$DMG_ROOT/Applications"
 hdiutil create -volname "$BUNDLE_NAME" -srcfolder "$DMG_ROOT" -ov -format UDZO "$DMG_PATH"
-echo "Signed app: $APP_BUNDLE"
-echo "Notarization zip: $ZIP_PATH"
+codesign --force --sign "$IDENTITY" --timestamp "$DMG_PATH"
+codesign --verify --verbose=2 "$DMG_PATH"
 echo "DMG: $DMG_PATH"
 
-if [[ -n "${NOTARYTOOL_PROFILE:-}" ]]; then
-  xcrun notarytool submit "$ZIP_PATH" --keychain-profile "$NOTARYTOOL_PROFILE" --wait
-  xcrun stapler staple "$APP_BUNDLE"
+if [[ -n "$NOTARY_PROFILE" ]]; then
+  xcrun notarytool submit "$DMG_PATH" --keychain-profile "$NOTARY_PROFILE" --wait
   xcrun stapler staple "$DMG_PATH"
-  spctl -a -vvv -t install "$APP_BUNDLE"
+  xcrun stapler validate "$DMG_PATH"
+  spctl --assess --type open --context context:primary-signature --verbose=4 "$DMG_PATH"
 else
-  echo "Skipping notarization: set NOTARYTOOL_PROFILE to a configured xcrun notarytool keychain profile."
+  echo "Skipping DMG notarization: set NOTARYTOOL_PROFILE or NOTARY_PROFILE to a configured xcrun notarytool keychain profile."
 fi

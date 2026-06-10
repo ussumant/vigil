@@ -16,10 +16,13 @@
 - Developer ID signing succeeds with hardened runtime
 - Signature verification succeeds
 - Release app launches
+- `auc-notary` profile works for Apple notarization
+- Stapled app validates as `source=Notarized Developer ID`
+- Stapled DMG validates as `source=Notarized Developer ID`
 
 ## Notarization
 
-Notarization is blocked until a notarytool keychain profile exists.
+The current working notarytool profile is `auc-notary`.
 
 Create one:
 
@@ -33,7 +36,7 @@ xcrun notarytool store-credentials "sumant-notary" \
 Then submit and staple:
 
 ```sh
-NOTARYTOOL_PROFILE=sumant-notary ./script/package_release.sh
+NOTARY_PROFILE=auc-notary ./script/package_release.sh
 ```
 
 ## App Store Notes
